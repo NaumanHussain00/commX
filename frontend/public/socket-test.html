@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Initializing...</div>
+    
+    <button onclick="testPolling()">Test Polling Only</button>
+    <button onclick="testWebSocket()">Test WebSocket Only</button>
+    <button onclick="testBoth()">Test Both Transports</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="logs"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logs.innerHTML = '';
+        }
+        
+        function getBaseURL() {
+            const hostname = window.location.hostname;
+            if (hostname === "localhost" || hostname === "127.0.0.1") {
+                return "http://localhost:3000";
+            }
+            return `http://${hostname}:3000`;
+        }
+        
+        function testConnection(transports, testName) {
+            const baseURL = getBaseURL();
+            log(`🧪 Testing ${testName} connection to: ${baseURL}`, 'info');
+            
+            const socket = io(baseURL, {
+                transports: transports,
+                autoConnect: true,
+                timeout: 10000,
+                withCredentials: true
+            });
+            
+            socket.on('connect', () => {
+                log(`✅ ${testName} connection successful! Socket ID: ${socket.id}`, 'success');
+                log(`🚀 Transport: ${socket.io.engine.transport.name}`, 'info');
+                status.textContent = `Connected via ${testName}`;
+                
+                setTimeout(() => {
+                    socket.disconnect();
+                    log(`🔌 ${testName} connection closed`, 'info');
+                }, 2000);
+            });
+            
+            socket.on('connect_error', (error) => {
+                log(`❌ ${testName} connection failed: ${error.message}`, 'error');
+                log(`Error type: ${error.type}`, 'error');
+                status.textContent = `${testName} connection failed`;
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log(`🔌 ${testName} disconnected: ${reason}`, 'info');
+            });
+            
+            socket.io.on('error', (error) => {
+                log(`❌ ${testName} Socket.IO error: ${error}`, 'error');
+            });
+        }
+        
+        function testPolling() {
+            testConnection(['polling'], 'Polling');
+        }
+        
+        function testWebSocket() {
+            testConnection(['websocket'], 'WebSocket');
+        }
+        
+        function testBoth() {
+            testConnection(['polling', 'websocket'], 'Both Transports');
+        }
+        
+        // Auto-test on page load
+        window.onload = () => {
+            log('🌐 Page loaded, starting automatic test...', 'info');
+            log(`🏠 Current hostname: ${window.location.hostname}`, 'info');
+            log(`🔗 Base URL: ${getBaseURL()}`, 'info');
+            
+            setTimeout(() => {
+                testBoth();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Request API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Connection Request API Test</h1>
+    
+    <div>
+        <label>Target User ID:</label>
+        <input type="text" id="userId" placeholder="Enter user ID to send request to">
+        <button onclick="sendConnectionRequest()">Send Connection Request</button>
+        <button onclick="testGetUsers()">Test Get Users API</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    
+    <div id="logs"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logs.innerHTML = '';
+        }
+        
+        function getBaseURL() {
+            const hostname = window.location.hostname;
+            if (hostname === "localhost" || hostname === "127.0.0.1") {
+                return "http://localhost:3000";
+            }
+            return `http://${hostname}:3000`;
+        }
+        
+        async function testGetUsers() {
+            try {
+                const baseURL = getBaseURL();
+                log(`🔍 Testing GET users API: ${baseURL}/connection/users`, 'info');
+                
+                const response = await axios.get(`${baseURL}/connection/users`, {
+                    withCredentials: true
+                });
+                
+                log(`✅ Users API success: ${response.data.data?.length || 0} users found`, 'success');
+                log(`📊 Users: ${JSON.stringify(response.data.data?.slice(0, 3) || [])}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Users API failed: ${error.message}`, 'error');
+                log(`❌ Status: ${error.response?.status}`, 'error');
+                log(`❌ Response: ${JSON.stringify(error.response?.data)}`, 'error');
+            }
+        }
+        
+        async function sendConnectionRequest() {
+            const userId = document.getElementById('userId').value;
+            if (!userId) {
+                log('❌ Please enter a user ID', 'error');
+                return;
+            }
+            
+            try {
+                const baseURL = getBaseURL();
+                const url = `${baseURL}/connectionrequest/send/pending/${userId}`;
+                log(`📤 Sending connection request to: ${url}`, 'info');
+                
+                const response = await axios.post(url, {}, {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`✅ Connection request sent successfully!`, 'success');
+                log(`📋 Response: ${JSON.stringify(response.data)}`, 'success');
+                
+            } catch (error) {
+                log(`❌ Connection request failed: ${error.message}`, 'error');
+                log(`❌ Status: ${error.response?.status}`, 'error');
+                log(`❌ Response: ${JSON.stringify(error.response?.data)}`, 'error');
+                
+                if (error.response?.status === 401) {
+                    log('🔐 Authentication required - please log in first', 'error');
+                } else if (error.response?.status === 400) {
+                    log('⚠️ Bad request - check user ID or request already exists', 'error');
+                } else if (error.response?.status === 404) {
+                    log('👤 User not found - check the user ID', 'error');
+                }
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = () => {
+            log('🌐 Page loaded', 'info');
+            log(`🏠 Current hostname: ${window.location.hostname}`, 'info');
+            log(`🔗 Base URL: ${getBaseURL()}`, 'info');
+            log('💡 First test the "Get Users" API to see available users, then copy a user ID to test connection requests', 'info');
+        };
+    </script>
+</body>
+</html>
