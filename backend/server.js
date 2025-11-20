@@ -12,8 +12,7 @@ const http = require("http");
 const allowedOrigins = [
   "http://localhost:5173",
   "http://10.1.0.222:5173",
-  // Add your production frontend URL here when deployed
-  // "https://your-frontend-domain.vercel.app",
+  "https://dancing-naiad-7f7663.netlify.app", // Netlify production frontend
   // Add more specific IPs as needed
 ];
 
