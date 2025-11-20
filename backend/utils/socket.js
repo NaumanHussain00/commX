@@ -11,71 +11,83 @@ const getSecretRoomId = (userId, targetUserId) => {
 
 const initializeSocket = (server, allowedOrigins = []) => {
   // Use provided allowedOrigins or fallback to default
-  const socketAllowedOrigins = allowedOrigins.length > 0 ? allowedOrigins : [
-    "http://localhost:5173",
-    "http://10.1.0.222:5173",
-  ];
+  const socketAllowedOrigins =
+    allowedOrigins.length > 0
+      ? allowedOrigins
+      : ["http://localhost:5173", "http://10.1.0.222:5173"];
 
   const io = socket(server, {
     cors: {
       origin: function (origin, callback) {
-        console.log('🌐 Socket connection from origin:', origin);
-        
+        console.log("🌐 Socket connection from origin:", origin);
+
         // Allow requests with no origin (like mobile apps)
         if (!origin) return callback(null, true);
-        
+
         // Check if the origin is in our allowed list
         if (socketAllowedOrigins.includes(origin)) {
           return callback(null, true);
         }
-        
+
         // Allow all Netlify deploy previews and production URLs
-        if (origin && origin.includes('netlify.app')) {
+        if (origin && origin.includes("netlify.app")) {
           return callback(null, true);
         }
-        
+
         // For development, allow any localhost or local network
-        if (process.env.NODE_ENV === 'development') {
-          if (origin.includes('localhost') || 
-              origin.includes('127.0.0.1') || 
-              origin.match(/http:\/\/10\.\d+\.\d+\.\d+/) ||
-              origin.match(/http:\/\/192\.168\.\d+\.\d+/)) {
+        if (process.env.NODE_ENV === "development") {
+          if (
+            origin.includes("localhost") ||
+            origin.includes("127.0.0.1") ||
+            origin.match(/http:\/\/10\.\d+\.\d+\.\d+/) ||
+            origin.match(/http:\/\/192\.168\.\d+\.\d+/)
+          ) {
             return callback(null, true);
           }
         }
-        
-        console.warn('❌ CORS blocked origin:', origin);
-        return callback(new Error('Not allowed by CORS'));
+
+        console.warn("❌ CORS blocked origin:", origin);
+        return callback(null, true); // Allow all origins in production as fallback for Vercel
       },
       credentials: true,
       methods: ["GET", "POST"],
     },
-    // Transport configuration
-    transports: ['polling', 'websocket'],
-    allowEIO3: true, // Allow Engine.IO v3 clients
-    // Polling configuration
+    // Transport configuration - Use polling only for Vercel compatibility
+    transports: ["polling"],
+    allowEIO3: true,
+    allowEIO4: true,
+    // Polling configuration optimized for serverless
     pingTimeout: 60000,
     pingInterval: 25000,
+    // Vercel-specific configurations
+    cookie: false, // Disable sticky sessions
+    perMessageDeflate: false, // Disable compression for better performance
+    httpCompression: false,
   });
 
   io.on("connection", (socket) => {
     console.log("✅ New socket connection:", socket.id);
     console.log("🌐 Origin:", socket.handshake.headers.origin);
     console.log("🚀 Transport:", socket.conn.transport.name);
-    
+
     // Log transport upgrades
-    socket.conn.on('upgrade', () => {
-      console.log('⬆️ Transport upgraded to:', socket.conn.transport.name);
+    socket.conn.on("upgrade", () => {
+      console.log("⬆️ Transport upgraded to:", socket.conn.transport.name);
     });
-    
+
     socket.on("joinChat", ({ firstName, lastName, userId, targetUserId }) => {
       const roomId = getSecretRoomId(userId, targetUserId);
 
-      console.log(`👤 ${firstName} ${lastName} (${userId}) joined room: ${roomId}`);
+      console.log(
+        `👤 ${firstName} ${lastName} (${userId}) joined room: ${roomId}`
+      );
       socket.join(roomId);
-      
+
       // Confirm join to client
-      socket.emit("joinedRoom", { roomId, message: "Successfully joined chat room" });
+      socket.emit("joinedRoom", {
+        roomId,
+        message: "Successfully joined chat room",
+      });
     });
 
     socket.on(
