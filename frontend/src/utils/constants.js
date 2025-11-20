@@ -13,14 +13,14 @@ export const BASE_URL = (() => {
     return "http://localhost:3000";
   }
 
-  // If accessing from Vercel or production domain, use deployed backend
-  // This covers cases like: yourapp.vercel.app, custom domains, etc.
+  // If accessing from Netlify or production domain, use deployed backend on Render
+  // This covers cases like: yourapp.netlify.app, custom domains, etc.
   if (
     hostname !== "localhost" &&
     hostname !== "127.0.0.1" &&
     !hostname.match(/^\d+\.\d+\.\d+\.\d+$/)
   ) {
-    return "https://comm-x.vercel.app";
+    return "https://commx-backend.onrender.com";
   }
 
   // If accessing from any other IP address (LAN), use that same IP for backend
