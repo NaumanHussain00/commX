@@ -12,6 +12,8 @@ const http = require("http");
 const allowedOrigins = [
   "http://localhost:5173",
   "http://10.1.0.222:5173",
+  // Add your production frontend URL here when deployed
+  // "https://your-frontend-domain.vercel.app",
   // Add more specific IPs as needed
 ];
 
@@ -20,18 +22,21 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       // Check if the origin is in our allowed list
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
+
       // For development, you might want to allow any localhost
-      if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
+      if (
+        process.env.NODE_ENV === "development" &&
+        origin.includes("localhost")
+      ) {
         return callback(null, true);
       }
-      
-      return callback(new Error('Not allowed by CORS'));
+
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true, // allow cookies, if needed
     allowedHeaders: ["Content-Type", "Authorization"],
