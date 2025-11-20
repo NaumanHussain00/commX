@@ -27,6 +27,11 @@ app.use(
         return callback(null, true);
       }
 
+      // Allow all Netlify deploy previews and production URLs
+      if (origin && origin.includes("netlify.app")) {
+        return callback(null, true);
+      }
+
       // For development, you might want to allow any localhost
       if (
         process.env.NODE_ENV === "development" &&

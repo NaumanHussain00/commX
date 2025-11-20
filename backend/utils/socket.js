@@ -29,6 +29,11 @@ const initializeSocket = (server, allowedOrigins = []) => {
           return callback(null, true);
         }
         
+        // Allow all Netlify deploy previews and production URLs
+        if (origin && origin.includes('netlify.app')) {
+          return callback(null, true);
+        }
+        
         // For development, allow any localhost or local network
         if (process.env.NODE_ENV === 'development') {
           if (origin.includes('localhost') || 
