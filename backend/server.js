@@ -47,6 +47,12 @@ const getConnectionRouter = require("./routes/user.route.js");
 const initializeSocket = require("./utils/socket.js");
 const chatRouter = require("./routes/chat.route.js");
 
+app.get("/", (req, res) => {
+  res.send("Welcome to CommX Backend Server");
+});
+
+// Routes
+
 app.use("/auth", userRouter);
 app.use("/user", profileRouter);
 app.use("/connectionrequest", connectionRouter);
