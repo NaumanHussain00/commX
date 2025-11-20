@@ -27,7 +27,12 @@ const registerUser = async (req, res) => {
     // console.log(user);
     // console.log(token);
 
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 8 * 3600000, // 8 hours
+    });
 
     return res.json({ message: "User Added successfully!", data: savedUser });
   } catch (err) {
@@ -48,7 +53,10 @@ const loginUser = async (req, res) => {
       const token = await user.getJWT();
 
       res.cookie("token", token, {
-        expires: new Date(Date.now() + 8 * 3600000),
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 8 * 3600000, // 8 hours
       });
 
       res.send(user);
@@ -61,7 +69,12 @@ const loginUser = async (req, res) => {
 };
 
 const logoutUser = (req, res) => {
-  res.cookie("token", null, { expires: new Date(Date.now()) });
+  res.cookie("token", null, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    expires: new Date(Date.now()),
+  });
   res.send("LOGOUT Successfully!!");
 };
 
