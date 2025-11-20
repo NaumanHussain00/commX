@@ -4,6 +4,9 @@ import { BASE_URL } from "./constants";
 export const createSocketConnection = () => {
   console.log('🔌 Creating socket connection to:', BASE_URL);
   
+  // Use polling-only for production (Vercel), allow WebSocket upgrade for localhost
+  const isProduction = BASE_URL.includes('vercel.app');
+  
   const socket = io(BASE_URL, {
     // Connection options
     autoConnect: true,
@@ -15,9 +18,9 @@ export const createSocketConnection = () => {
     // CORS options
     withCredentials: true,
     
-    // Transport options - start with polling, allow upgrade to websocket
-    transports: ['polling', 'websocket'],
-    upgrade: true,
+    // Transport options - polling only for Vercel compatibility
+    transports: isProduction ? ['polling'] : ['polling', 'websocket'],
+    upgrade: !isProduction,
     rememberUpgrade: false,
     
     // Engine.IO options
