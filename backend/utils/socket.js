@@ -47,22 +47,17 @@ const initializeSocket = (server, allowedOrigins = []) => {
         }
 
         console.warn("❌ CORS blocked origin:", origin);
-        return callback(null, true); // Allow all origins in production as fallback for Vercel
+        return callback(new Error("Not allowed by CORS"));
       },
       credentials: true,
       methods: ["GET", "POST"],
     },
-    // Transport configuration - Use polling only for Vercel compatibility
-    transports: ["polling"],
+    // Transport configuration - Render supports WebSocket properly
+    transports: ["polling", "websocket"],
     allowEIO3: true,
-    allowEIO4: true,
-    // Polling configuration optimized for serverless
+    // Polling configuration
     pingTimeout: 60000,
     pingInterval: 25000,
-    // Vercel-specific configurations
-    cookie: false, // Disable sticky sessions
-    perMessageDeflate: false, // Disable compression for better performance
-    httpCompression: false,
   });
 
   io.on("connection", (socket) => {
