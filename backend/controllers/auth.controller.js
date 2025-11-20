@@ -78,4 +78,4 @@ const logoutUser = (req, res) => {
   res.send("LOGOUT Successfully!!");
 };
 
-module.exports = { registerUser, loginUser ,logoutUser};
+module.exports = { registerUser, loginUser, logoutUser };
